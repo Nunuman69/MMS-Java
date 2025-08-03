@@ -1,16 +1,17 @@
-//MMS Simulation
-public class MMS{
-        private class ListNode {
-        String PgmName; 
-        int address;    
-        int size;   
-        ListNode next;  
+// MMS Simulation
+import java.util.Scanner;
+
+public class MMS {
+    private class ListNode {
+        String PgmName;
+        int address;
+        int size;
+        ListNode next;
     }
 
-    int MMSsize; // Total memory size
+    int MMSsize;
     ListNode allocList, freeList;
 
-    // Constructor to initialize memory
     public MMS(int size) {
         MMSsize = size;
         allocList = null;
@@ -20,14 +21,12 @@ public class MMS{
         freeList.next = null;
     }
 
-
-    // alloc method to allocate memory block to a process
     public void alloc(String name, int size) {
         ListNode ptr = freeList, candidate = null, newNode;
 
-        // Find the smallest suitable free block(Linear Search and smallest fit strategy)
+        // Find the smallest suitable free block
         while (ptr != null) {
-            if (ptr.size >= size) {
+            if (ptr.size >= size && ptr.size > 0) {
                 if (candidate == null || ptr.size < candidate.size) {
                     candidate = ptr;
                 }
@@ -37,13 +36,14 @@ public class MMS{
 
         // If no suitable free block found, do garbage collection
         if (candidate == null) {
+            System.out.println("[GC] Garbage collection triggered to defragment memory.");
             freeList = GarbageCollection(allocList);
             if (freeList.size >= size) {
                 candidate = freeList;
             }
         }
 
-        // If no free block found, abandon attempt to allocate space
+        // If no free block found, abandon attempt
         if (candidate == null || candidate.size < size) {
             System.out.println("\n==========================================");
             System.out.println("error: alloc: insufficient space");
@@ -52,24 +52,20 @@ public class MMS{
             return;
         }
 
-        // Create a new node(to be inserted into allocList)
+        // Create new node and insert into allocList
         newNode = new ListNode();
         newNode.PgmName = name;
         newNode.address = candidate.address;
         newNode.size = size;
         newNode.next = null;
 
-        // Update found free block (candidate)
         candidate.address += size;
         candidate.size -= size;
 
-        // Insert newNode into allocList, maintaining order by start address
         allocList = insert(newNode, allocList);
     }
 
-    // free method to free memory blocks belonging to a process
     public void free(String name) {
-        // Remove matching nodes at the front of allocList
         while (allocList != null && allocList.PgmName.equals(name)) {
             ListNode toDelete = allocList;
             allocList = allocList.next;
@@ -77,10 +73,8 @@ public class MMS{
             freeList = toDelete;
         }
 
-        // If allocList is empty, return
         if (allocList == null) return;
 
-        // Remove matching nodes in the middle or end
         ListNode prev = allocList;
         ListNode current = allocList.next;
 
@@ -97,7 +91,6 @@ public class MMS{
         }
     }
 
-    // Print allocated memory blocks
     public void printalloc() {
         System.out.println("List of allocated blocks\n");
         System.out.println("Process Name   Start Address   Size");
@@ -113,7 +106,6 @@ public class MMS{
         System.out.println("-----------------------------------\n");
     }
 
-    // Print free memory blocks
     public void printfree() {
         System.out.println("List of free blocks\n");
         System.out.println("Start address   Size");
@@ -121,29 +113,36 @@ public class MMS{
         int count = 0;
         ListNode ptr = freeList;
         while (ptr != null) {
-            System.out.format("%-16d%-10d\n", ptr.address, ptr.size);
+            if (ptr.size > 0) {
+                System.out.format("%-16d%-10d\n", ptr.address, ptr.size);
+                count++;
+            }
             ptr = ptr.next;
-            count++;
         }
         System.out.println("\n" + count + " block(s) in the free list\n");
         System.out.println("-----------------------------------\n");
     }
 
+    public int getTotalFreeMemory() {
+        int total = 0;
+        ListNode ptr = freeList;
+        while (ptr != null) {
+            total += ptr.size;
+            ptr = ptr.next;
+        }
+        return total;
+    }
 
-
-    // Consolidate all allocated blocks and return single free block
     private ListNode GarbageCollection(ListNode allocList) {
         ListNode ptr = allocList;
         int currentAddress = 0;
 
-        // Update the starting addresses for all nodes in alloclist
         while (ptr != null) {
             ptr.address = currentAddress;
             currentAddress += ptr.size;
             ptr = ptr.next;
         }
 
-        // Create freeList with one node for consolidated free space
         ListNode newFree = new ListNode();
         newFree.address = currentAddress;
         newFree.size = MMSsize - currentAddress;
@@ -151,7 +150,7 @@ public class MMS{
 
         return newFree;
     }
-    // Insert a node into the allocList in order of address
+
     private ListNode insert(ListNode node, ListNode allocList) {
         if (allocList == null || node.address < allocList.address) {
             node.next = allocList;
@@ -167,31 +166,4 @@ public class MMS{
 
         return allocList;
     }
-
-public static void main(String[] args) {
-    MMS myMem = new MMS(100);
-
-    myMem.printalloc();
-    myMem.printfree();
-
-    myMem.alloc("pgmA",50);
-    myMem.printalloc();
-    myMem.printfree();
-
-    myMem.alloc("pgmB",20);
-    myMem.printalloc();
-    myMem.printfree();
-
-    myMem.alloc("pgmA",10);
-    myMem.printalloc();
-    myMem.printfree();
-
-    myMem.free("pgmB");
-    myMem.printalloc();
-    myMem.printfree();
-
-    myMem.alloc("pgmD",25);
-    myMem.printalloc();
-    myMem.printfree();
-}
 }
