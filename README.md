@@ -1,6 +1,6 @@
 # MMS: Memory Management System (Java Simulation)
 
-This project simulates a simple Memory Management System (MMS) using linked lists in Java. It was created as part of an academic assignment at York University for the course ITEC 2620 (Summer 2025).
+This project simulates a simple Memory Management System (MMS) using linked lists in Java. It was created as part of an academic assignment at York University.
 
 ---
 
